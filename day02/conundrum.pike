@@ -1,5 +1,3 @@
-
-
 class Game {
   int number;
   array(mapping(string:int)) draws = ({});
@@ -8,11 +6,7 @@ class Game {
     string draws_string;
     sscanf(line, "Game %d: %s", this->number, draws_string);
     foreach (draws_string / "; ";; string draws) {
-      mapping(string:int) draw_mapping = ([
-	"red": 0,
-	"green": 0,
-	"blue": 0
-      ]);
+      mapping(string:int) draw_mapping = (["red": 0, "green": 0, "blue": 0]);
       foreach (draws / ", ";; string draw) {
 	string color;
 	int count;
@@ -24,20 +18,13 @@ class Game {
   }
 
   int is_valid() {
-    foreach(draws;; mapping(string:int) draw) {
-      if ((draw["red"] > 12) || (draw["green"] > 13) || (draw["blue"] > 14)) {
-	return 0;
-      }
-    }
-    return 1;
+    return Array.all(draws, lambda(mapping(string:int) draw) {
+      return (draw["red"] <= 12) && (draw["green"] <= 13) && (draw["blue"] <= 14);
+    });
   }
 
   int power() {
-    mapping(string:int) minimum = ([
-      "red": 0,
-      "green": 0,
-      "blue": 0
-    ]);
+    mapping(string:int) minimum = (["red": 0, "green": 0, "blue": 0]);
     foreach(draws;; mapping(string:int) draw) {
       foreach(draw; string color; int count) {
 	if (count > minimum[color]) {
@@ -45,22 +32,14 @@ class Game {
 	}
       }
     }
-    return Array.reduce(`*, values(minimum) - ({ 0 }));
+    return Array.reduce(`*, values(minimum));
   }
 }
 
 int main(int argc, array(string) argv) {
-  array(string) lines = (Stdio.read_file(argv[1]) / "\n") - ({""});
-  int sum = 0;
-  int power_sum = 0;
-  foreach(lines;; string line) {
-    Game game = Game(line);
-    if (game->is_valid()) {
-      sum += game->number;
-    }
-    write("%d %O\n", game->number, game->power());
-    power_sum += game->power();
-  }
-  write("Problem 1: %d\n", sum);
-  write("Problem 2: %d\n", power_sum);
+  array(Game) games = map((Stdio.read_file(argv[1]) / "\n") - ({""}), Game);
+  array(Game) valid_games = filter(games, lambda(Game g) { return g->is_valid(); });
+
+  write("Problem 1: %d\n", Array.reduce(`+, map(valid_games, lambda(Game g) { return g->number; })));
+  write("Problem 2: %d\n", Array.reduce(`+, map(games, lambda(Game g) { return g->power(); })));
 }
