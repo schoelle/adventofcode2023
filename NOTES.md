@@ -7,4 +7,9 @@
   redefining _sprintf, which is quite a complex function. A
   `to_string` specially for this case would have been much more
   convenient.
+* `lambda` expressions are quite heavy weight. Would be great if there
+  would be a lighter way to express them.
+* How can I pass a class method as a function where the target becomes
+  the argument, other than explicit `lambda`?
+
 
