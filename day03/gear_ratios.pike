@@ -16,18 +16,13 @@ class Item {
   }
 }
 
-array(Item) get_objects(array(string) lines, function detect) {
+array(Item) find_items(array(string) lines, function detect) {
   array(Item) res = ({ });
   foreach(lines; int line_nr; string line) {
-    line += ".";
     for (int i = 0; i < sizeof(line); i++) {
-      int c = line[i];
-      if (detect(c)) {
-	int j = i;	
-	while (j < sizeof(line) && detect(c)) {
-	  j++;
-	  c = line[j];
-	}
+      if (detect(line[i])) {
+	int j = i;
+	while (j < sizeof(line) && detect(line[j])) j++;
 	res += ({ Item(line[i..j-1], i, line_nr) });
 	i = j;
       }
@@ -38,10 +33,10 @@ array(Item) get_objects(array(string) lines, function detect) {
 
 int main(int argc, array(string) argv) {
   array(string) lines = (Stdio.read_file(argv[1]) / "\n") - ({});
-  array(Item) symbols = get_objects(lines, lambda(int c) {
+  array(Item) symbols = find_items(lines, lambda(int c) {
     return (((c < '0') || (c > '9')) && (c != '.'));
   });
-  array(Item) numbers = get_objects(lines, lambda(int c) {
+  array(Item) numbers = find_items(lines, lambda(int c) {
     return ((c >= '0') && (c <= '9'));
   });
   int sum = 0;
