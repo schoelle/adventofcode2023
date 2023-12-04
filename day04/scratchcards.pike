@@ -10,18 +10,16 @@ class Card {
   int matches() {
     return sizeof(win_nbrs & have_nbrs);
   }
-  
-  int points() {
-    int p = matches();
-    if (p == 0) { return 0; }
-    return 1 << (p-1);
-  }
 }
 
 
 int main(int argc, array(string) argv) {
   array(Card) cards = map((Stdio.read_file(argv[1]) / "\n") - ({""}), Card);
-  write("Problem 1: %d\n", Array.reduce(`+, map(cards, lambda(Card c) { return c->points(); })));
+  write("Problem 1: %d\n", Array.reduce(`+, map(cards, lambda(Card c) {
+    int p = c->matches();
+    if (p == 0) { return 0; }
+    return 1 << (p-1);
+  })));
   int n = sizeof(cards);
   array(int) count = ({ 1 }) * n;
   for (int i=0; i < n; i++) {
