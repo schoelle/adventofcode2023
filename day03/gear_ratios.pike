@@ -32,7 +32,7 @@ array(Item) find_items(array(string) lines, function detect) {
 }
 
 int main(int argc, array(string) argv) {
-  array(string) lines = (Stdio.read_file(argv[1]) / "\n") - ({});
+  array(string) lines = (Stdio.read_file(argv[1]) / "\n") - ({""});
   array(Item) symbols = find_items(lines, lambda(int c) {
     return (((c < '0') || (c > '9')) && (c != '.'));
   });
