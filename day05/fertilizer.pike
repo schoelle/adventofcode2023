@@ -8,10 +8,8 @@ class Seed {
 
 class Rule {
   int target; int start; int count;
-  void create(int target, int start, int count) {
-    this->target = target;
-    this->start = start;
-    this->count = count;
+  void create(string str) {
+    sscanf(str, "%d %d %d", this->target, this->start, this->count);
   }
   
   array(array(Seed)) apply(Seed s) {
@@ -22,11 +20,9 @@ class Rule {
     }
     if (s->start + s->count > this->start + this->count) {
       keep += ({ Seed(max(s->start, this->start + this->count),
-		      min(s->count,
-			  s->start + s->count - this->start - this->count)) });
+		      min(s->count, s->start + s->count - this->start - this->count)) });
     }
-    if ((s->start + s->count > this->start) &&
-	(s->start < this->start + this->count)) {
+    if ((s->start + s->count > this->start) && (s->start < this->start + this->count)) {
       move += ({ Seed(max(s->start,this->start) + this->target - this->start,
 		      min(s->count - (max(s->start,this->start) - s->start),
 			  this->start + this->count - s->start )) });
@@ -55,21 +51,9 @@ int compute_location(array(array(Rule)) rules, array(Seed) seeds) {
 
 int main(int argc, array(string) argv) {
   array(string) lines = (Stdio.read_file(argv[1]) / "\n");
+
   sscanf(lines[0], "seeds: %s", string seed_line);
   array(int) numbers = map(seed_line / " ", lambda(string s) { return (int) s; });
-  int row = 3;
-  array(array(Rule)) rules = ({});
-  while (row < sizeof(lines)) {
-    array(Rule) group = ({});
-    while (row < sizeof(lines) && lines[row] != "") {
-      array(string) parts = lines[row] / " ";
-      group += ({ Rule((int) parts[0], (int) parts[1], (int) parts[2]) });
-      row += 1;
-    }
-    rules += ({ group });
-    row += 2;
-  }
-  
   array(Seed) seeds1 = ({});
   array(Seed) seeds2 = ({});
   for (int i = 0; i < sizeof(numbers); i = i + 2) {
@@ -77,6 +61,18 @@ int main(int argc, array(string) argv) {
     seeds2 += ({ Seed(numbers[i], numbers[i+1]) });
   }
 
+  int row = 3;
+  array(array(Rule)) rules = ({});
+  while (row < sizeof(lines)) {
+    array(Rule) group = ({});
+    while (row < sizeof(lines) && lines[row] != "") {
+      group += ({ Rule(lines[row]) });
+      row += 1;
+    }
+    rules += ({ group });
+    row += 2;
+  }
+  
   write("Problem 1: %d\n", compute_location(rules, seeds1));
   write("Problem 2: %d\n", compute_location(rules, seeds2));
 }
