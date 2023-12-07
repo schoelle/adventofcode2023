@@ -1,9 +1,9 @@
+int problem2 = 0; // Change sorting behaviour for problem 2
+ 
 class Card {
   string hand; int value;
   void create(string line) { sscanf(line, "%s %d", hand, value); }
 }
-
-int problem2 = 0;
 
 string occurrence_profile(Card c) {
   mapping(int:int) occurrences = ([]);
@@ -17,9 +17,7 @@ string occurrence_profile(Card c) {
       occurrences[v] = 1;
     }
   }
-  if (extra == 5) {
-    return "5";
-  }
+  if (extra == 5) { return "5"; }
   array(int) counts = reverse(sort(values(occurrences)));
   counts[0] += extra;
   return map(counts, lambda (int i) { return ""+i; }) * "";
@@ -43,19 +41,17 @@ int sort_func(Card a, Card b) {
   return value_profile(a) > value_profile(b);
 }
 
+int value_of(array(Card) cards) {
+  int sum = 0;
+  foreach (cards; int i; Card card) {
+    sum += (i+1) * card->value;
+  }
+  return sum;
+}
+
 int main(int argc, array(string) argv) {
   array(Card) cards = map((Stdio.read_file(argv[1]) / "\n") - ({""}), Card);
-   cards = Array.sort_array(cards, sort_func);
-   int sum = 0;
-   foreach (cards; int i; Card card) {
-     sum += (i+1) * card->value;
-   }
-   write("Problem 1: %d\n", sum);
-   problem2 = 1;
-   cards = Array.sort_array(cards, sort_func);
-   sum = 0;
-   foreach (cards; int i; Card card) {
-     sum += (i+1) * card->value;
-   }
-   write("Problem 2: %d\n", sum);
+  write("Problem 1: %d\n", value_of(Array.sort_array(cards, sort_func)));
+  problem2 = 1;
+  write("Problem 2: %d\n", value_of(Array.sort_array(cards, sort_func)));
 }
