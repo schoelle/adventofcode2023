@@ -8,7 +8,6 @@ int calc1(array(int) coeffs, int n) {
   return c[0];
 }
 
-
 int calc2(array(int) coeffs) {
   int sum = 0;
   for (int i=sizeof(coeffs); i > 0; i--) {
@@ -16,7 +15,6 @@ int calc2(array(int) coeffs) {
   }
   return sum;
 }
-
 
 array(int) diff_seq(array(int) seq) {
   int v = seq[0];
@@ -27,7 +25,6 @@ array(int) diff_seq(array(int) seq) {
   }
   return res;
 }
-
 
 array(int) derive(array(int) input) {
   if (Array.reduce(max, input) == Array.reduce(min, input)) {
