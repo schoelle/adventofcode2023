@@ -23,6 +23,10 @@ class Pos {
 	      Pos(this->x, this->y+1),
 	      Pos(this->x-1, this->y) });
   }
+
+  int is_border() {
+    return (x == 0) || (x == maze_width-1) || (y == 0) || (y == maze_height-1);
+  }
 }
 
 class PosDir {
@@ -67,6 +71,42 @@ class PosDir {
     }
   }
 
+  array(Pos) left() {
+    array(Pos) r = ({ pos->next()[(dir+1) % 4] });
+    int c = pos->get();
+    if ((dir == 0) && (c == 'J')) {
+      r += ({ pos->next()[2] }); 
+    }
+    if ((dir == 1) && (c == 'L')) {
+      r += ({ pos->next()[3] });
+    }
+    if ((dir == 2) && (c == 'F')) {
+      r += ({ pos->next()[0] });
+    }
+    if ((dir == 3) && (c == '7')) {
+      r += ({ pos->next()[1] });
+    }
+    return r;
+  }
+    
+  array(Pos) right() {
+    array(Pos) r = ({ pos->next()[(dir+3) % 4] });
+    int c = pos->get();
+    if ((dir == 0) && (c == 'L')) {
+      r += ({ pos->next()[2] }); 
+    }
+    if ((dir == 1) && (c == 'F')) {
+      r += ({ pos->next()[3] });
+    }
+    if ((dir == 2) && (c == '7')) {
+      r += ({ pos->next()[0] });
+    }
+    if ((dir == 3) && (c == 'J')) {
+      r += ({ pos->next()[1] });
+    }
+    return r;
+  }
+    
   array(PosDir) path() {
     PosDir next = step();
     if (next) {
@@ -74,9 +114,6 @@ class PosDir {
     } else {
       return ({ this });
     }
-  }
-  string _sprintf(int conversion_type, mapping(string:int)|void params) {
-    return sprintf("%d %d %d", pos->x, pos->y, dir);
   }
 }
 
@@ -108,25 +145,29 @@ void find_path() {
   }
 }
 
-void print_maze(array(Pos) show) {
-  multiset(string) t = (< >);
-  foreach (show;; Pos p) {
-    t[sprintf("%dx%d", p->x, p->y)] = 1;
-  }
-  for (int y; y < maze_height; y++) {
-    for (int x; x < maze_width; x++) {
-      string id = sprintf("%dx%d", x, y);
-      if (t[id]) {
-	write("X");
-      } else {
-	write(".");
-      }
-    }
-    write("\n");
-  }
-  write("\n");
+string pid(Pos pos) {
+  return sprintf("%dx%d\n", pos->x, pos->y);
 }
 
+array(Pos) grow(array(Pos) todo, array(Pos) occupied) {
+  array(Pos) r = ({ });
+  multiset(string) o = (< >);
+  foreach (occupied;; Pos oc) {
+    o[pid(oc)] = 1;
+  }
+  while (sizeof(todo) > 0) {
+    Pos f = todo[0];
+    todo = todo[1..];
+    if (f->get() == 'O')
+      continue;
+    if (o[pid(f)])
+      continue;
+    r += ({ f });
+    o[pid(f)] = 1;
+    todo += f->next();
+  }
+  return r;
+}
 
 int main(int argc, array(string) argv) {
   maze = (Stdio.read_file(argv[1]) / "\n") - ({""});
@@ -135,4 +176,14 @@ int main(int argc, array(string) argv) {
   find_start();
   find_path();
   write("Problem 1: %d\n", sizeof(path) / 2);
+  array(Pos) occupied = map(path, lambda (PosDir d) { return d->pos; });
+  array(Pos) left = Array.flatten(map(path, lambda (PosDir d) { return d->left(); })); 
+  array(Pos) right = Array.flatten(map(path, lambda (PosDir d) { return d->right(); }));
+  left = grow(left, occupied);
+  right = grow(right, occupied);
+  if (Array.any(left, lambda (Pos p) { return p->is_border(); })) {
+    write("Problem 2: %d\n", sizeof(right));
+  } else { 
+    write("Problem 2: %d\n", sizeof(left));
+  }
 }
