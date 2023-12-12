@@ -11,5 +11,8 @@
   would be a lighter way to express them.
 * How can I pass a class method as a function where the target becomes
   the argument, other than explicit `lambda`?
+* Is there an easy way to cast all elements of an array? Like
+  `array(string)` to `array(int)` instead of having to pass `lambda`
+  to `map`? What about the reverse?
 
 
