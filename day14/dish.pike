@@ -84,15 +84,16 @@ int load() {
 void loop_cycle(int n) {
   int i = 0;
   mapping(string:int) c = ([]);
+  // We detect the start and end of the cycle
   while (!has_index(c, map * "\n")) {
     c[map * "\n"] = i;
     cycle();
     i += 1;
   }
   int j = c[map * "\n"];
-  for (int v; v < (n-j) % (i-j); v++) {
-    cycle();
-  }
+  // Now we finish cycling based on the remainder
+  int todo = (n-j) % (i-j);
+  for (int v; v < todo; v++) cycle();
 }
 
 
@@ -100,7 +101,7 @@ int main(int argc, array(string) argv) {
   array(string) lines = (Stdio.read_file(argv[1]) / "\n") - ({""});
   width = sizeof(lines[0]);
   height = sizeof(lines);
-  map = ({ }) + lines;
+  map = ({ }) + lines; // Pattern to copy an array
   shift_north();
   write("Problem 1: %d\n", load());
   map = ({ }) + lines;
