@@ -6,91 +6,65 @@ constant LEFT = 8;
 array(array(int)) shifts = ({ 0, ({ 0, -1 }), ({ 1, 0 }), 0, ({ 0, 1 }), 0, 0, 0, ({ -1, 0 }) });
 
 array(string) map;
-array(Worker) todo;
+array(int) todo;
 array(array(int)) filled;
 int width;
 int height;
 
-class Worker {
-  int x;
-  int y;
-  int dir;
-
-  void create(int x, int y, int dir) {
-    this->x = x;
-    this->y = y;
-    this->dir = dir;
+void step() {
+  int x = todo[0] + shifts[todo[2]][0];
+  int y = todo[1] + shifts[todo[2]][1];
+  if ((x < 0) || (x >= width) || (y < 0) || (y >= height) || (filled[y][x] & todo[2])) {
+    todo = todo[3..];
+    return;
   }
-  
-  void step() {
-    int x = this->x + shifts[this->dir][0];
-    int y = this->y + shifts[this->dir][1];
-    if ((x < 0) || (x >= width) || (y < 0) || (y >= height) || (filled[y][x] & this->dir)) {
-      return;
+  filled[y][x] |= todo[2];
+  todo[0] = x;
+  todo[1] = y;
+  switch (map[y][x]) {
+  case '.':
+    return;
+  case '/':
+    switch (todo[2]) {
+    case UP:
+      todo[2] = RIGHT; return;
+    case RIGHT:
+      todo[2] = UP; return;
+    case DOWN:
+      todo[2] = LEFT; return;
+    case LEFT:
+      todo[2] = DOWN; return;
     }
-    filled[y][x] |= this->dir;
-    switch (map[y][x]) {
-    case '.':
-      todo += ({ Worker(x, y, this->dir) }); 
-      break;
-    case '/':
-      switch (this->dir) {
-      case UP:
-	todo += ({ Worker(x, y, RIGHT) }); break;
-      case RIGHT:
-	todo += ({ Worker(x, y, UP) }); break;
-      case DOWN:
-	todo += ({ Worker(x, y, LEFT) }); break;
-      case LEFT:
-	todo += ({ Worker(x, y, DOWN) });  break;	
-      }
-      break;
-    case '\\':
-      switch (this->dir) {
-      case UP:
-	todo += ({ Worker(x, y, LEFT) }); break;
-      case RIGHT:
-	todo += ({ Worker(x, y, DOWN) }); break;
-      case DOWN:
-	todo += ({ Worker(x, y, RIGHT) }); break;
-      case LEFT:
-	todo += ({ Worker(x, y, UP) }); break;	
-      }
-      break;
-    case '|':
-      switch (this->dir) {
-      case LEFT:
-      case RIGHT:
-	todo += ({ Worker(x, y, UP) }); 
-	todo += ({ Worker(x, y, DOWN) }); 
-	break;
-      default:
-	todo += ({ Worker(x, y, this->dir) }); 
-      }
-      break;
-    case '-':
-      switch (this->dir) {
-      case UP:
-      case DOWN:
-	todo += ({ Worker(x, y, LEFT) }); 
-	todo += ({ Worker(x, y, RIGHT) }); 
-	break;
-      default:
-	todo += ({ Worker(x, y, this->dir) }); 
-      }
-      break;
+  case '\\':
+    switch (todo[2]) {
+    case UP:
+      todo[2] = LEFT; return;
+    case RIGHT:
+      todo[2] = DOWN; return;
+    case DOWN:
+      todo[2] = RIGHT; return;
+    case LEFT:
+      todo[2] = UP; return;
+    }
+  case '|':
+    if ((todo[2] == LEFT) || (todo[2] == RIGHT)) {
+      todo[2] = UP;
+      todo += ({ x, y, DOWN });
+    }
+    return;
+  case '-':
+    if ((todo[2] == UP) || (todo[2] == DOWN)) {
+      todo[2] = LEFT;
+      todo += ({ x, y, RIGHT });
+      return;
     }
   }
 }
 
 int work(int x, int y, int dir) {
   filled = allocate(width * height) / width;
-  todo = ({ Worker(x, y, dir) });  
-  while (sizeof(todo) > 0) {
-    Worker w = todo[0];
-    todo = todo[1..];
-    w->step();
-  }
+  todo = ({ x, y, dir });  
+  while (sizeof(todo) > 0) step();
   return sizeof(filter(Array.flatten(filled), lambda(int i) { return i > 0; }));
 }
 
