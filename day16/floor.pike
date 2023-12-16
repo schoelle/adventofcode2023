@@ -6,10 +6,10 @@ constant LEFT = 8;
 array(array(int)) shifts = ({ 0, ({ 0, -1 }), ({ 1, 0 }), 0, ({ 0, 1 }), 0, 0, 0, ({ -1, 0 }) });
 
 array(string) map;
-array(int) todo;
-array(array(int)) filled;
 int width;
 int height;
+array(int) todo; // Sequence of triplets: x, y, exit direction
+array(array(int)) filled;
 
 void step() {
   int x = todo[0] + shifts[todo[2]][0];
@@ -22,8 +22,6 @@ void step() {
   todo[0] = x;
   todo[1] = y;
   switch (map[y][x]) {
-  case '.':
-    return;
   case '/':
     switch (todo[2]) {
     case UP:
@@ -56,8 +54,8 @@ void step() {
     if ((todo[2] == UP) || (todo[2] == DOWN)) {
       todo[2] = LEFT;
       todo += ({ x, y, RIGHT });
-      return;
     }
+    return;
   }
 }
 
