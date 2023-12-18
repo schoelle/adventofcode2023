@@ -1,5 +1,5 @@
-array(string) carved;
-array(string) plan;
+array(array(int)) turning_points;
+array(string) lavamap;
 int width;
 int height;
 
@@ -21,24 +21,6 @@ int sign(int v) {
   return 0;
 }
 
-void build_map() {
-  width = (sizeof(xpos_map) * 2) + 1;
-  height = (sizeof(ypos_map) * 2) + 1;
-  plan = allocate(height, "." * width);
-  int cx = find(xpos_map, 0);
-  int cy = find(ypos_map, 0);
-  foreach(carved;; string s) {
-    sscanf(s, "%dx%d", int x, int y);
-    x = find(xpos_map, x);
-    y = find(ypos_map, y);
-    while ((cx != x) || (cy != y)) {
-      cx += sign(x-cx);
-      cy += sign(y-cy);
-      plan[cy][cx] = '#'; 
-    }
-  }
-}
-
 int find(array(int) stack, int needle) {
   int i=0;
   while(stack[i] < needle) i++;
@@ -58,27 +40,59 @@ int block_size(array(int) stack, int needle) {
   return (stack[needle/2] - stack[(needle-2) / 2]) - 1;
 }
 
+void build_map() {
+  width = (sizeof(xpos_map) * 2) + 1;
+  height = (sizeof(ypos_map) * 2) + 1;
+  lavamap = allocate(height, "." * width);
+  int cx = find(xpos_map, 0);
+  int cy = find(ypos_map, 0);
+  foreach(turning_points;; array(int) p) {
+    int x = find(xpos_map, p[0]);
+    int y = find(ypos_map, p[1]);
+    while ((cx != x) || (cy != y)) {
+      cx += sign(x-cx);
+      cy += sign(y-cy);
+      lavamap[cy][cx] = '#'; 
+    }
+  }
+}
+
 void fill_map() {
   array(array(int)) todo = ({ ({ 0, 0}) });
   while (sizeof(todo) > 0) {
     array(int) pos = todo[0];
     todo = todo[1..];
     if ((pos[0] < 0) || (pos[0] >= width) || (pos[1] < 0) || (pos[1] >= height) ||
-	(plan[pos[1]][pos[0]] != '.')) continue;
-    plan[pos[1]][pos[0]] = ',';
+	(lavamap[pos[1]][pos[0]] != '.')) continue;
+    lavamap[pos[1]][pos[0]] = ',';
     todo += ({ ({ pos[0]-1, pos[1] }),
 	       ({ pos[0]+1, pos[1] }),
 	       ({ pos[0], pos[1]-1 }),
 	       ({ pos[0], pos[1]+1 }) });
   }
-  plan = replace(plan * "\n", ".", "#") / "\n";
+  lavamap = replace(lavamap * "\n", ".", "#") / "\n";
 }
 
-int count_filled() {
+int measure_dig(array(string) dirs, array(int) counts) {
+  turning_points = ({ });
+  int x = 0;
+  int y = 0;
+  foreach (dirs; int i; string dir) {
+    int count = counts[i];
+    xpos_map += ({ x });
+    ypos_map += ({ y });
+    x += offsets[dir][0] * count;
+    y += offsets[dir][1] * count;
+    turning_points += ({ ({ x, y }) });
+  }
+  xpos_map = (array(int)) (multiset(int)) Array.sort_array(xpos_map);
+  ypos_map = (array(int)) (multiset(int)) Array.sort_array(ypos_map);
+  build_map();
+  fill_map();
   int sum = 0;
   for (int y=0; y < height; y++) {
     for (int x=0; x < width; x++) {
-      if (plan[y][x] == '#') {
+      if (lavamap[y][x] == '#') {
 	sum += block_size(xpos_map, x) * block_size(ypos_map, y);
       }
     }
@@ -86,36 +100,18 @@ int count_filled() {
   return sum;
 }
 
-int measure_map(array(string) dirs, array(int) counts) {
-  carved = ({ "0x0" });
-  int x = 0;
-  int y = 0;  
-  foreach (dirs; int i; string dir) {
-    int count = counts[i];
-    xpos_map += ({ x });
-    ypos_map += ({ y });
-    x += offsets[dir][0] * count;
-    y += offsets[dir][1] * count;
-    carved += ({ sprintf("%dx%d", x, y) });
-  }
-  xpos_map = (array(int)) (multiset(int)) Array.sort_array(xpos_map);
-  ypos_map = (array(int)) (multiset(int)) Array.sort_array(ypos_map);
-  build_map();
-  fill_map();
-  return count_filled();
-}
-
 int main(int argc, array(string) argv) {
   array(string) lines = (Stdio.read_file(argv[1]) / "\n") - ({""});
+
   array(string) dirs = ({ });
   array(int) counts = ({ });
-  
   foreach (lines;; string line) {
-    sscanf(line, "%s %d (#%s)", string dir, int count, string color);
+    sscanf(line, "%s %d (#%s)", string dir, int count, string stuff);
     dirs += ({ dir });
     counts += ({ count });
   }
-  write("Problem 1: %d\n", measure_map(dirs, counts));
+  write("Problem 1: %d\n", measure_dig(dirs, counts));
+
   dirs = ({ });
   counts = ({ });
   foreach (lines;; string line) {
@@ -123,5 +119,5 @@ int main(int argc, array(string) argv) {
     dirs += ({ dir_enc[dir] });
     counts += ({ count });
   }
-  write("Problem 2: %d\n", measure_map(dirs, counts));
+  write("Problem 2: %d\n", measure_dig(dirs, counts));
 }
