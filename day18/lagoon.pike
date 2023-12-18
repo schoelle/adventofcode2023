@@ -79,14 +79,14 @@ int measure_dig(array(string) dirs, array(int) counts) {
   int y = 0;
   foreach (dirs; int i; string dir) {
     int count = counts[i];
-    xpos_map += ({ x });
-    ypos_map += ({ y });
     x += offsets[dir][0] * count;
     y += offsets[dir][1] * count;
+    xpos_map += ({ x });
+    ypos_map += ({ y });
     turning_points += ({ ({ x, y }) });
   }
-  xpos_map = (array(int)) (multiset(int)) Array.sort_array(xpos_map);
-  ypos_map = (array(int)) (multiset(int)) Array.sort_array(ypos_map);
+  xpos_map = sort((array(int)) (multiset(int)) xpos_map);
+  ypos_map = sort((array(int)) (multiset(int)) ypos_map);
   build_map();
   fill_map();
   int sum = 0;
