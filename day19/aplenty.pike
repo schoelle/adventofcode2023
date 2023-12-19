@@ -28,6 +28,47 @@ class Rule {
     }
     return otherwise;
   }
+
+  int size_accepted(mapping(int:array(int)) part) {
+    if (part_size(part) == 0) {
+      return 0;
+    }
+    int sum = 0;
+    for(int i=0; i < sizeof(measures); i++) {
+      int m = measures[i];
+      int v = values[i];
+      string t = targets[i];
+      mapping(int:array(int)) split = copy_value(part);
+      if (ops[i] == '<') {
+	split[m][1] = min(split[m][1], v-1);
+	part[m][0] = max(part[m][0], v);
+      } else {
+	split[m][0] = max(split[m][0], v+1);
+	part[m][1] = min(part[m][1], v);
+      }
+      if (t == "A") {
+	sum += part_size(split);
+      } else if (t != "R") {
+	sum += rules[t]->size_accepted(split);
+      }
+    }
+    if (otherwise == "A") {
+      return sum + part_size(part);
+    }
+    if (otherwise == "R") {
+      return sum;
+    }
+    return sum + rules[otherwise]->size_accepted(part);
+  }
+  
+}
+
+int part_size(mapping(int:array(int)) part)  {
+  return
+    max(part['x'][1] - part['x'][0] + 1, 0) *
+    max(part['m'][1] - part['m'][0] + 1, 0) *
+    max(part['a'][1] - part['a'][0] + 1, 0) *
+    max(part['s'][1] - part['s'][0] + 1, 0);
 }
 
 mapping(string:Rule) rules = ([]);
@@ -59,4 +100,8 @@ int main(int argc, array(string) argv) {
     }
   }
   write("Problem 1: %d\n", sum);
+  write("Problem 2: %d\n", rules["in"]->size_accepted(([ 'x': ({ 1, 4000 }),
+							 'm': ({ 1, 4000 }),
+							 's': ({ 1, 4000 }),
+							 'a': ({ 1, 4000 }) ])));
 }
